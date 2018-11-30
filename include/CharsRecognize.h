@@ -21,11 +21,11 @@ private:
     void setMean(const vector<float> &mean_values);
     void wrapInputLayer(const cv::Mat &im);
     cv::Mat imResize(const cv::Mat &im);
-
-    string getPredictString(const vector<float>& fm);
-
-    void getLayerFeatureMaps(string &layer_name,vector<float> &out_data,vector<int>& out_shape);
     cv::Mat imConvert(const cv::Mat &im);
+
+    string getPredictString(const vector<float>& fm, vector<int>& predicts);
+    void getLayerFeatureMaps(const string &layer_name,vector<float> &out_data,vector<int>& out_shape);
+    float getCTCLoss(const float* data, const int tempsteps, const vector<int>& predicts);
 
 private:
     int gpu_id = 0;

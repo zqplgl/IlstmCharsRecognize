@@ -37,7 +37,7 @@ int main() {
         end = clock();
         cout<<"cost time: "<<double(end-start)/1000<<" ms"<<endl;
 
-        cout<<"license: "<<result.first<<endl;
+        cout<<"license: "<<result.first<<"\tscore: "<<result.second<<endl;
         imshow("im",im);
 
        if(waitKey(0)==27)

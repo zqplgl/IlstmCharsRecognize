@@ -2,9 +2,31 @@
 // Created by zqp on 18-11-25.
 //
 #include <CharsRecognize.h>
+#include <ctcpp.h>
+
 using namespace caffe;
 using namespace cv;
 
+float CharsRecognize::getCTCLoss(const float *data, const int timesteps, const vector<int> &predicts)
+{
+    size_t workspace_alloc_bytes_;
+    ctcOptions options;
+    options.loc = CTC_CPU;
+    options.num_threads = 8;
+    options.blank_label = index_blank;
+
+    int len = int(predicts.size());
+    ctcStatus_t status = CTC::get_workspace_size<float>(&len, &timesteps,
+            int(labels_.size()),1,options,&workspace_alloc_bytes_);
+
+    vector<float> workspace_(workspace_alloc_bytes_);
+
+    float cost = 0;
+    status = CTC::compute_ctc_loss_cpu<float>(data,0,predicts.data(),
+            &len,&timesteps,labels_.size(),1,&cost,workspace_.data(),options);
+
+    return cost;
+}
 CharsRecognize::CharsRecognize(const string &deploy_file, const string &weight_file, const string &mean_file,
                                const vector<float> &mean_values, const string &label_file, const int gpu_id)
 {
@@ -87,22 +109,68 @@ CharsRecognize::CharsRecognize(const string &deploy_file, const string &weight_f
 
 std::pair<std::string,float> CharsRecognize::recognize(const cv::Mat &im)
 {
-    std::pair<string,float> result;
-    cv::Mat im_resized = imResize(im);
+    cv::Mat im_src;
+    cv::resize(im,im_src,cv::Size(110,32));
+    cv::Mat im_resized = imResize(im_src);
     cv::Mat im_normalized = imConvert(im_resized);
     wrapInputLayer(im_normalized);
 
     net_->Forward();
 
+#if 0
+    const boost::shared_ptr<Blob<float> > blob = net_->blob_by_name("fc1x");
+    int n = blob->num();
+    int c = blob->channels();
+    int h = blob->height();
+    int w = blob->width();
+    int size = blob->count();
+    cout<<"fc1x"<<" : "<<n<<" "<<c<<" "<<h<<" "<<w<<endl;
+    vector<float> out_data;
+    vector<int> out_shape;
+
+    getLayerFeatureMaps(string("fc1x"),out_data,out_shape);
+
+    int max_index = 0;
+    int t = c*h*w;
+    float max_value = 0;
+    for(int i=0; i<out_data.size(); ++i)
+    {
+        if(i%t==0 && i)
+        {
+            cout<<"max_index: "<<max_index<<"\tmax_value: "<<max_value<<endl;
+        }
+
+        if(out_data[i]>max_value)
+        {
+            max_value = out_data[i];
+            max_index = i%t;
+        }
+    }
+
+
+    vector<float> result_data;
+    vector<int> result_shape;
+    getLayerFeatureMaps(string("result"),result_data,result_shape);
+#endif
+
     Blob<float>* output_layer = net_->output_blobs()[0];
     const float* begin = output_layer->cpu_data();
     const float* end = begin + output_layer->count();
-
     vector<float> fm = std::vector<float>(begin, end);
-    string chars = getPredictString(fm);
+    vector<int> predicts;
+    string chars = getPredictString(fm,predicts);
 
+    std::pair<string,float> result;
     result.first = chars;
-    result.second = 1;
+
+    vector<float> out_data;
+    vector<int> out_shape;
+
+    getLayerFeatureMaps(string("fc1x"),out_data,out_shape);
+    int tempsteps = out_shape[0];
+    float score = getCTCLoss(out_data.data(),tempsteps,predicts);
+
+    result.second = score;
     return result;
 }
 
@@ -129,7 +197,7 @@ cv::Mat CharsRecognize::imResize(const cv::Mat &im)
 
 }
 
-void CharsRecognize::getLayerFeatureMaps(string &layer_name, vector<float> &out_data, vector<int> &out_shape)
+void CharsRecognize::getLayerFeatureMaps(const string &layer_name, vector<float> &out_data, vector<int> &out_shape)
 {
     out_data.clear();
     out_shape.clear();
@@ -240,14 +308,18 @@ void CharsRecognize::setMean(const vector<float> &mean_values)
 //
 }
 
-string CharsRecognize::getPredictString(const vector<float> &fm)
+string CharsRecognize::getPredictString(const vector<float> &fm, vector<int>& predicts)
 {
+    predicts.clear();
     string chars;
     for(int i=0; i<fm.size(); ++i)
     {
         int label = int(fm[i]+0.5f);
         if(label>=0 && label != index_blank)
+        {
             chars += labels_[label];
+            predicts.push_back(label);
+        }
     }
     return chars;
 }
