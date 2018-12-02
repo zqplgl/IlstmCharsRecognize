@@ -42,7 +42,7 @@ CharsRecognize::CharsRecognize(const string &deploy_file, const string &weight_f
     net_.reset(new Net<float>(deploy_file,TEST));
     net_->CopyTrainedLayersFrom(weight_file);
 
-#if 1
+#if 0
     vector<string> blob_names = net_->blob_names();
     for (int i=0; i<blob_names.size(); ++i)
     {
