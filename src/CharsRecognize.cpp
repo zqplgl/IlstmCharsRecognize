@@ -170,7 +170,7 @@ std::pair<std::string,float> CharsRecognize::recognize(const cv::Mat &im)
     int tempsteps = out_shape[0];
     float score = getCTCLoss(out_data.data(),tempsteps,predicts);
 
-    result.second = score;
+    result.second = 1 - score;
     return result;
 }
 
@@ -232,8 +232,6 @@ cv::Mat CharsRecognize::imConvert(const cv::Mat &im)
         sample.convertTo(sample_float, CV_32FC3);
     else
         sample.convertTo(sample_float, CV_32FC1);
-
-    cv::cvtColor(sample_float,sample_float,cv::COLOR_BGR2RGB);
 
     cv::Mat sample_normalized;
     if(use_mean_file)
