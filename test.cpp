@@ -22,8 +22,13 @@ void getImPath(string& picDir,vector<string>&imPath)
 }
 
 int main() {
+
+    vector<float> mean_value = {152,152,152};
     string model_dir = "/home/zqp/install_lib/models/";
-    ICharsRecognize *reconizer = CreateICharsRecognize(model_dir,0);
+    string deploy_file = model_dir+"plate/recogniser/deploy.prototxt";
+    string weight_file = model_dir+"plate/recogniser/weights.caffemodel";
+    string label_file = model_dir+"plate/recogniser/labels.txt";
+    ICharsRecognize *reconizer = CreateICharsRecognize(deploy_file,weight_file,label_file,mean_value);
     string pic_dir = "/home/zqp/pic/testimge";
     vector<string> impath;
     getImPath(pic_dir,impath);

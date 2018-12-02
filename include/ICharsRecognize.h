@@ -8,6 +8,8 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
+using namespace std;
+
 
 class ICharsRecognize
 {
@@ -17,6 +19,7 @@ public:
 
 };
 
-ICharsRecognize *CreateICharsRecognize(const std::string& model_dir,const int gpu_id);
+ICharsRecognize *CreateICharsRecognize(const std::string& deploy_file,const string weight_file,
+                                       const string& label_file,const vector<float>& mean_value, const string mean_file="",const int gpu_id=0);
 
 #endif //LSTMCHARSRECOGNIZE_ICHARSRECOGNIZE_H

@@ -322,16 +322,9 @@ string CharsRecognize::getPredictString(const vector<float> &fm, vector<int>& pr
     return chars;
 }
 
-ICharsRecognize *CreateICharsRecognize(const std::string& model_dir,const int gpu_id)
+ICharsRecognize *CreateICharsRecognize(const std::string& deploy_file,const string weight_file,
+        const string& label_file,const vector<float>& mean_value, const string mean_file,const int gpu_id)
 {
-    string temp_dir = model_dir;
-    if(temp_dir[temp_dir.size()-1]!='/')
-        temp_dir += "/";
-    string deploy_file = temp_dir+"plate/recogniser/deploy.prototxt";
-    string weight_file = temp_dir+"plate/recogniser/weights.caffemodel";
-    string label_file = temp_dir+"plate/recogniser/labels.txt";
-    string mean_file = "";
-    vector<float> mean_value = {152,152,152};
     ICharsRecognize *recognizer = new CharsRecognize(deploy_file,weight_file,mean_file,mean_value,label_file,gpu_id);
 
     return recognizer;
