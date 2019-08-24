@@ -14,7 +14,7 @@ include_directories(/usr/local/cuda/include)
 file(GLOB SRC src/*.cpp)
 find_package(OpenCV 3.4 REQUIRED)
 
-find_library(Boostpython_LIB boost_python REQUIRED)
+find_library(Boostpython_LIB boost_python3 REQUIRED)
 message(STATUS Found Boostpython_LIB:  ${Boostpython_LIB})
 find_library(Boostsystem_LIB boost_system REQUIRED)
 message(STATUS Found Boostsystem_LIB:  ${Boostsystem_LIB})
